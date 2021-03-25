@@ -1,0 +1,28 @@
+from pyspark import SparkConf, SparkContext                               #to import pyspark context library
+
+conf = SparkConf().setMaster("local").setAppName("PopularSuperHero")      #to setup the cluster
+sc = SparkContext(conf = conf)                                            #to create the cluster
+
+def countCoOccurences(line):                                              #to create the function
+    elements = line.split()                                               #separates the lines
+    return (int(elements[0]), len(elements)  -1)
+
+def parseNames(line):                                                     #creates the function
+    fields = line.split('\"')                                             #separates the lines by the delimeter
+    return (int(fields[0]),  fields[1].encode("utf8"))                    #returns index 1
+names = sc.textFile("/Users/mimi/Desktop/Coud Computing/4th_assignm/Marvel-names.txt")  #to locate the file with the heros names
+namesRdd = names.map(parseNames)                                          #create value key
+
+lines = sc.textFile("/Users/mimi/Desktop/Coud Computing/4th_assignm/Marvel-graph.txt")  #to locate the file with the heros number
+
+pairings = lines.map(countCoOccurences)
+totalCharacter = pairings.reduceByKey(lambda x, y: x + y)                #to add the ratings
+flipped = totalCharacter.map(lambda xy : (xy[1],xy[0]))                  #x is a tuple. to flip the ratings position
+
+mostPopular = flipped.max()                                               #to get max on the 
+
+mostPopularName = namesRdd.lookup(mostPopular[1])[0]                      #agregating all the instances
+
+print(mostPopularName)                                                    #to output the result of the most popular super hero
+
+
